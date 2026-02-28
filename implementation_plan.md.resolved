@@ -1,0 +1,161 @@
+# Timer & Stopwatch Web Application — Implementation Plan
+
+A production-grade React web app with stopwatch, countdown timer, analog/digital clock, smart reminders, confetti completion, theme customization, and full responsiveness.
+
+---
+
+## Proposed Changes
+
+### Project Setup
+
+#### [NEW] Vite React Project at `P:\My apps\Clock`
+
+- Initialize with `npx -y create-vite@latest ./ -- --template react`
+- Install **framer-motion** for animations, **canvas-confetti** for completion effects
+- Clean out default Vite boilerplate
+
+---
+
+### Design System & Global Styles
+
+#### [NEW] `src/index.css`
+
+- CSS custom properties for theming (dark mode default)
+- Glassmorphism mixins, responsive breakpoints
+- Typography scale using **Inter** from Google Fonts
+- Smooth transition defaults, scrollbar styling
+
+---
+
+### Utility Layer
+
+#### [NEW] `src/hooks/useLocalStorage.js`
+- Generic hook wrapping `localStorage` with JSON parse/stringify
+
+#### [NEW] `src/hooks/useTimer.js`
+- Shared interval logic for both stopwatch (counting up) and timer (counting down)
+- Proper `useRef` + `useEffect` cleanup to prevent memory leaks
+
+#### [NEW] `src/utils/audio.js`
+- Programmatic audio generation using **Web Audio API** (oscillator tones)
+- Two sounds: soft reminder chime, success completion tone
+- Mute/unmute state support
+
+#### [NEW] `src/utils/time.js`
+- `formatTime(ms)` → `HH:MM:SS.cc`
+- `parseTime(h,m,s)` → milliseconds
+- Validation helpers
+
+---
+
+### Component Architecture
+
+#### [NEW] `src/App.jsx`
+- Top-level state: current mode, theme settings, sound mute
+- Renders `Header`, `ModeSelector`, `Stopwatch`, `Timer`, or `SettingsPanel`
+- Keyboard shortcut listener (Space = start/pause, R = reset, F = fullscreen)
+- Framer Motion `AnimatePresence` for page transitions
+
+#### [NEW] `src/components/Header.jsx`
+- Live date/time display (updates every second)
+- Format: `Sunday, March 1, 2026 — 01:08 AM`
+- Settings gear icon, sound toggle, fullscreen button
+
+#### [NEW] `src/components/ModeSelector.jsx`
+- Landing screen with two large cards: Stopwatch & Timer
+- Glassmorphism card style with hover animations
+- Smooth transition to selected mode
+
+#### [NEW] `src/components/Stopwatch.jsx`
+- Clock display (digital or analog via toggle)
+- Controls: Start, Pause, Resume, Reset, Lap
+- Lap history panel (scrollable list with lap #, split time, total time)
+- Lap data persisted to localStorage
+
+#### [NEW] `src/components/Timer.jsx`
+- Time input screen (HH:MM:SS with sliders + number inputs, max 23:59:59)
+- Clock display (digital or analog) during countdown
+- Progress bar (animated ring or linear bar)
+- Controls: Start, Pause, Resume, Reset
+- Custom timer name input
+- Reminder system integration
+- On completion: confetti, success sound, "Target Achieved 🎯" overlay
+
+#### [NEW] `src/components/ClockDisplay.jsx`
+- Props: `time`, `mode` (digital/analog), `maxTime` (for progress)
+- **Digital**: Large monospace digits with subtle glow
+- **Analog**: SVG clock face with hour/minute/second hands, tick marks
+- Toggle button to switch display type
+
+#### [NEW] `src/components/Controls.jsx`
+- Reusable button group with icon + label
+- Framer Motion tap/hover animations
+- Adapts buttons based on current state (running/paused/idle)
+
+#### [NEW] `src/components/ReminderSystem.jsx`
+- UI to set interval (e.g., every 5, 10, 15, 30 min)
+- Enable/disable toggle
+- At each interval: plays chime, shows motivational toast with pulse animation
+- Motivational messages from a curated list
+
+#### [NEW] `src/components/SettingsPanel.jsx`
+- Color pickers for: background, clock face, accent color
+- Theme preset buttons (Dark, Midnight Blue, Forest, etc.)
+- Reset to defaults
+- All settings saved to localStorage
+
+#### [NEW] `src/components/CompletionOverlay.jsx`
+- Full-screen overlay with "Target Achieved 🎯"
+- canvas-confetti burst
+- Dismiss button to return to timer setup
+
+---
+
+### Data Persistence
+
+All via `useLocalStorage` hook:
+
+| Key | Data |
+|-----|------|
+| `clock-mode` | `"stopwatch"` or `"timer"` |
+| `clock-theme` | `{ bg, clockColor, accent }` |
+| `clock-timer-name` | `string` |
+| `clock-reminder` | `{ enabled, intervalMin }` |
+| `clock-laps` | `Lap[]` |
+| `clock-sound-muted` | `boolean` |
+
+---
+
+### Responsive Design
+
+- **Mobile-first** CSS with breakpoints at `480px`, `768px`, `1024px`, `1440px`
+- Flexbox layout for controls, CSS Grid for settings panel
+- Touch-friendly button sizes (min 48px tap target)
+- Fluid typography with `clamp()`
+
+---
+
+## Verification Plan
+
+### Automated — Dev Server Build Check
+
+```bash
+cd "P:\My apps\Clock"
+npm run dev
+```
+Confirm no build errors or warnings in terminal.
+
+### Browser Testing (via browser subagent)
+
+1. **Landing Page**: Open `http://localhost:5173`, verify two mode cards visible
+2. **Stopwatch**: Click Stopwatch → Start → verify time counting → Lap → verify lap entry → Pause → Resume → Reset
+3. **Timer**: Click Timer → set 00:01:00 → Start → verify countdown → let it reach 0 → verify completion overlay
+4. **Clock Toggle**: Switch between digital/analog display in both modes
+5. **Theme**: Open settings → change accent color → verify applied
+6. **Responsive**: Resize browser to mobile width → verify layout adapts
+7. **Keyboard**: Press Space to start/pause, R to reset
+
+### Manual Verification (by user)
+
+- Open in a mobile browser to verify touch interactions
+- Verify alarm/reminder sounds play correctly (audio requires user gesture)
