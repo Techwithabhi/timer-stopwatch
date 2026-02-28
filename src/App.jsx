@@ -9,10 +9,10 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { setMuted } from './utils/audio';
 
 const DEFAULT_THEME = {
-  name: 'Midnight',
-  bg: '#0a0a1a',
-  clockColor: '#e0e0ff',
-  accent: '#6c5ce7',
+  name: 'Cyan Glow',
+  bg: '#060b18',
+  clockColor: '#e0ffff',
+  accent: '#00e5ff',
 };
 
 /**
